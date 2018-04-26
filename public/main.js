@@ -66,9 +66,13 @@ function fetchMessages() {
 }
 
 let changes = 0;
-document.getElementById("newmessage").addEventListener("keypress", (event) => {
+document.getElementById("newmessage").addEventListener("keyup", (event) => {
     // here is where we will emit real-time text
-    console.log("event", event);
+    // console.log("event", event);
+    console.log(this);
+    
+    console.log(textarea.value);
+    
     socket.emit('typing', { sender: name, message: textarea.value, changes });
     changes++;
     // if the key pressed was enter (and not shift enter), post the message.
@@ -85,7 +89,7 @@ document.getElementById("newmessage").addEventListener("keypress", (event) => {
 
 // Listen for events
 socket.on('typing', data => {
-    console.log(data);
+    // console.log(data);
     if (!data.changes) {
         messagesDiv.innerHTML +=
             `<div class="message"><strong>${data.sender}</strong><br>${data.message}</div>`;

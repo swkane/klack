@@ -13,6 +13,8 @@ io.on('connection', socket => {
     console.log("made a successful connection", socket.id);
     
     socket.on('typing', data => {
+        console.log(data);
+        
         io.sockets.emit('typing', data);
     });
 });

@@ -1,3 +1,6 @@
+// we have access to io variable becuase we have loaded in the io library in our index.html
+let socket = io.connect('http://localhost:3000');
+
 const userList = document.getElementById("users");
 const messagesDiv = document.getElementById("messageslist");
 const textarea = document.getElementById("newmessage");
@@ -62,30 +65,37 @@ function fetchMessages() {
         })
 }
 
+let changes = 0;
 document.getElementById("newmessage").addEventListener("keypress", (event) => {
+    // here is where we will emit real-time text
+    console.log("event", event);
+    socket.emit('typing', { sender: name, message: textarea.value, changes });
+    changes++;
     // if the key pressed was enter (and not shift enter), post the message.
     if(event.keyCode === 13 && !event.shiftKey) {
+        changes = 0;
         textarea.disabled = true;
-        const postRequestOptions = {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({sender: name, message: textarea.value}),
-        }
-        fetch("/messages", postRequestOptions)
-            .then(response => response.json())
-            .then(msg => {
-                appendMessage(msg);
-                scrollMessages();
-
-                // reset the textarea
-                textarea.value="";
-                textarea.disabled = false;
-                textarea.focus();
-            })
+        scrollMessages();
+        // reset the textarea
+        textarea.value="";
+        textarea.disabled = false;
+        textarea.focus();
     }
 })
+
+// Listen for events
+socket.on('typing', data => {
+    console.log(data);
+    if (!data.changes) {
+        messagesDiv.innerHTML +=
+            `<div class="message"><strong>${data.sender}</strong><br>${data.message}</div>`;
+    } else {
+        messagesDiv.lastChild.innerHTML = `<strong>${data.sender}</strong><br>${data.message}`;
+    }
+});
+
+
+
 
 // call on startup to populate the messages and start the polling loop
 fetchMessages();

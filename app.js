@@ -1,7 +1,21 @@
 const express = require('express')
 const querystring = require('querystring');
-const port = 3000
-const app = express()
+const port = 3000;
+const app = express();
+let socket = require('socket.io');
+
+let server = app.listen(3000, () => console.log('klack away on http://localhost:3000'));
+
+var io = socket(server);
+
+// socket setup
+io.on('connection', socket => {
+    console.log("made a successful connection", socket.id);
+    
+    socket.on('typing', data => {
+        io.sockets.emit('typing', data);
+    });
+});
 
 // List of all messages
 let messages = []
@@ -64,4 +78,3 @@ app.post("/messages", (request, response) => {
     response.send(request.body)
 })
 
-app.listen(3000)

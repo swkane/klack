@@ -62,6 +62,7 @@ app.get("/messages", (request, response) => {
         console.log(msgs);
         // create a new list of users with a flag indicating whether they have been active recently
         usersSimpleDB = msgs.map( msg => ({ name: msg.sender, active: ( msg.timestamp > requireActiveSince) }))
+        // TODO: sending duplicate users in usersSimpleDB
         response.send({ messages: msgs, users: usersSimpleDB});
     })
 

@@ -1,10 +1,24 @@
 const express = require('express')
 const querystring = require('querystring');
+const mongoose = require('mongoose');
 const port = 3000;
 const app = express();
 let socket = require('socket.io');
 
-let server = app.listen(3000, () => console.log('klack away on http://localhost:3000'));
+let server = app.listen(3000, () => {
+    mongoose.connect('mongodb://localhost/klack');
+    console.log('klack away on http://localhost:3000')
+});
+
+// Model
+let messageSchema = mongoose.Schema({
+    user: String,
+    text: String,
+    timestamp: Number
+});
+
+// Instance
+let Message = mongoose.model('Message', messageSchema);
 
 var io = socket(server);
 

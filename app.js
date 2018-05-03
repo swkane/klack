@@ -1,7 +1,20 @@
 const express = require('express')
 const querystring = require('querystring');
 const port = 3000
+const mongoose = require('mongoose');
 const app = express()
+
+// Model
+let messageSchema = mongoose.Schema({
+    sender: String,
+    message: String,
+    timestamp: Number
+});
+
+
+// Instance / compile
+let Message = mongoose.model('Message', messageSchema);
+
 
 // List of all messages
 let messages = []
@@ -44,13 +57,22 @@ app.get("/messages", (request, response) => {
     // update the requesting user's last access time
     users[request.query.for] = now;
 
+    // Send messages from mongoose
+    Message.find(function(err, msgs) {
+        console.log(msgs);
+        // create a new list of users with a flag indicating whether they have been active recently
+        usersSimpleDB = msgs.map( msg => ({ name: msg.sender, active: ( msg.timestamp > requireActiveSince) }))
+        response.send({ messages: msgs, users: usersSimpleDB});
+    })
+
     // send the latest 40 messages and the full user list, annotated with active flags
-    response.send({messages: messages.slice(-40), users: usersSimple})
+    // response.send({messages: messages.slice(-40), users: usersSimple})
 })
 
 app.post("/messages", (request, response) => {
     // add a timestamp to each incoming message.
     const timestamp = Date.now()
+
     request.body.timestamp = timestamp
 
     // append the new message to the message list
@@ -59,9 +81,19 @@ app.post("/messages", (request, response) => {
     // update the posting user's last access timestamp (so we know they are active)
     users[request.body.sender] = timestamp
 
+    // Store the message in mongoose
+    Message.create( {...request.body, timestamp }, function(err, msg) {
+        // update the posting user's last access timestamp (so we know they are active) using mongodb
+        users[msg.sender] = msg.timestamp;
+        console.log(`Saved message from ${msg.sender}`);
+    });
+
     // Send back the successful response.
     response.status(201)
     response.send(request.body)
 })
 
-app.listen(3000)
+app.listen(3000, () => {
+    mongoose.connect('mongodb://localhost/klack');
+    console.log('running klack on port 3000');
+})
